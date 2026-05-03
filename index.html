@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учёт инвентаря - Торговые точки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        /* Выбор торговой точки - плитками */
+        .shop-selector {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .shop-selector h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .shop-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .shop-card:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .shop-card.active {
+            border-color: #3498db;
+            background: linear-gradient(135deg, #e3f2fd, #fff);
+        }
+        
+        .shop-card-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .shop-card-id {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .shop-card.active .shop-card-name {
+            color: #3498db;
+        }
+        
+        .rename-shop {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .rename-shop input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .rename-shop button {
+            width: auto;
+            padding: 8px 20px;
+            background: #3498db;
+        }
+        
+        /* Основные вкладки */
+        .main-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .main-tab-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .main-tab-btn:hover {
+            background: #bdc3c7;
+        }
+        
+        .main-tab-btn.active {
+            background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+            color: white;
+        }
+        
+        .main-tab-content {
+            display: none;
+        }
+        
+        .main-tab-content.active {
+            display: block;
+        }
+        
+        /* Карточка выдачи */
+        .card-give {
+            background: #f0fff0;
+            border: 2px solid #2ecc71;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card-give h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #27ae60;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: scale(0.98);
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .stats-grid {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-label {
+            width: 120px;
+            font-size: 14px;
+        }
+        
+        .stat-bar {
+            flex: 1;
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            background: #2ecc71;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 15px;
+        }
+        
+        .stat-fill.warning {
+            background: #f39c12;
+        }
+        
+        .stat-fill.danger {
+            background: #e74c3c;
+        }
+        
+        .courier-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+        }
+        
+        .courier-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .courier-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .courier-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: none;
+        }
+        
+        .add-courier {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .add-courier input {
+            flex: 1;
+        }
+        
+        .add-courier button {
+            width: auto;
+            padding: 10px 20px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .items-table th, .items-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .items-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+        
+        .force-free {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+        }
+        
+        .force-free:hover {
+            background: #c0392b;
+            transform: none;
+        }
+        
+        .message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 1000;
+            animation: fadeOut 3s forwards;
+        }
+        
+        .message.success {
+            background: #2ecc71;
+        }
+        
+        .message.error {
+            background: #e74c3c;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+        
+        /* Стили для графика работы */
+        .schedule-container {
+            display: flex;
+            gap: 20px;
+            min-height: 600px;
+        }
+        
+        .regions-panel {
+            width: 320px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+        
+        .regions-panel h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        .region-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .region-card:hover {
+            background: #e9ecef;
+        }
+        
+        .region-card.active {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+        
+        .region-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .region-name-input {
+            font-size: 13px;
+            padding: 5px 8px;
+            width: 140px;
+        }
+        
+        .region-save-btn {
+            background: #2ecc71;
+            width: auto;
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+        
+        .couriers-in-region {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .region-courier-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .region-courier-name {
+            font-weight: 500;
+        }
+        
+        .add-courier-to-region {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .add-courier-to-region input {
+            flex: 1;
+            padding: 6px;
+            font-size: 12px;
+        }
+        
+        .add-courier-to-region button {
+            width: auto;
+            padding: 6px 10px;
+            font-size: 11px;
+            background: #2ecc71;
+        }
+        
+        .remove-courier-btn {
+            background: #e74c3c;
+            padding: 3px 8px;
+            font-size: 10px;
+            width: auto;
+        }
+        
+        .schedule-panel {
+            flex: 1;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        
+        .schedule-panel h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .nav-buttons button {
+            width: auto;
+            padding: 8px 16px;
+        }
+        
+        .date-range {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .schedule-table-wrapper {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+        
+        .schedule-table {
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 100%;
+        }
+        
+        .schedule-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 6px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        .schedule-table th:first-child {
+            position: sticky;
+            left: 0;
+            background: #2c3e50;
+            z-index: 20;
+            min-width: 120px;
+        }
+        
+        .schedule-table td {
+            border: 1px solid #ddd;
+            padding: 8px 6px;
+            text-align: center;
+            min-width: 65px;
+        }
+        
+        .schedule-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: white;
+            font-weight: 600;
+            text-align: left;
+            z-index: 5;
+            white-space: nowrap;
+        }
+        
+        .schedule-table tr:hover td:first-child {
+            background: #f8f9fa;
+        }
+        
+        .summary-row {
+            background: #e8f4fd;
+            font-weight: bold;
+            border-top: 2px solid #3498db;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .summary-row td {
+            background: #e8f4fd;
+            padding: 8px 6px;
+            font-weight: bold;
+        }
+        
+        .summary-label {
+            text-align: left !important;
+            font-weight: bold;
+            background: #e8f4fd;
+        }
+        
+        .summary-cell {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .summary-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            background: white;
+            font-weight: bold;
+        }
+        
+        .summary-badge.r { color: #2ecc71; border: 1px solid #2ecc71; }
+        .summary-badge.o { color: #1abc9c; border: 1px solid #1abc9c; }
+        .summary-badge.b { color: #1abc9c; border: 1px solid #1abc9c; }
+        .summary-badge.n { color: #f39c12; border: 1px solid #f39c12; }
+        .summary-badge.v { color: #e74c3c; border: 1px solid #e74c3c; }
+        
+        .status-select {
+            width: 50px;
+            padding: 5px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            font-size: 11px;
+            border: none;
+        }
+        
+        .schedule-legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 18px;
+            border-radius: 4px;
+        }
+        
+        .legend-color.n { background-color: #f39c12; }
+        .legend-color.r { background-color: #2ecc71; }
+        .legend-color.b { background-color: #1abc9c; }
+        .legend-color.o { background-color: #1abc9c; }
+        .legend-color.x { background-color: #95a5a6; }
+        .legend-color.s { background-color: #9b59b6; }
+        .legend-color.e { background-color: #3498db; }
+        .legend-color.v { background-color: #e74c3c; }
+        
+        /* Две колонки для инвентаря */
+        .inventory-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+        
+        /* Карточка со статистикой */
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .stats-card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        /* Таблица занятых предметов */
+        .taken-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .taken-card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        @media (max-width: 900px) {
+            .inventory-layout {
+                grid-template-columns: 1fr;
+            }
+            .schedule-container {
+                flex-direction: column;
+            }
+            .regions-panel {
+                width: 100%;
+                max-height: none;
+            }
+        }
+        
+        h1 {
+            background: linear-gradient(135deg, #2c3e50, #1a1a2e);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏪 СИСТЕМА УЧЁТА ИНВЕНТАРЯ - ТОРГОВЫЕ ТОЧКИ</h1>
+        
+        <!-- Выбор торговой точки - плитками -->
+        <div class="shop-selector">
+            <h3>🏢 Торговые точки</h3>
+            <div class="shop-grid" id="shopGrid"></div>
+            <div class="rename-shop">
+                <input type="text" id="shopRenameInput" placeholder="Новое название выбранной точки">
+                <button onclick="renameCurrentShop()">✏️ Переименовать</button>
+            </div>
+        </div>
+        
+        <!-- Основные вкладки -->
+        <div class="main-tabs">
+            <button class="main-tab-btn active" onclick="switchMainTab('inventory')">📦 Инвентарь</button>
+            <button class="main-tab-btn" onclick="switchMainTab('schedule')">📅 График работы</button>
+        </div>
+        
+        <!-- Вкладка Инвентарь -->
+        <div id="main-tab-inventory" class="main-tab-content active">
+            <div class="inventory-layout">
+                <!-- Левая колонка -->
+                <div>
+                    <!-- Курьеры -->
+                    <div class="stats-card">
+                        <h2>👥 Курьеры точки</h2>
+                        <div class="courier-list" id="courierList"><div style="text-align: center; padding: 20px;">Загрузка...</div></div>
+                        <div class="add-courier">
+                            <input type="text" id="newCourierName" placeholder="Имя и фамилия" onkeypress="if(event.key==='Enter') addInventoryCourier()">
+                            <button onclick="addInventoryCourier()" style="background:#2ecc71;">➕ Добавить</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Выдача предмета -->
+                    <div class="card-give">
+                        <h2>🎒 ВЫДАТЬ ПРЕДМЕТ</h2>
+                        <div class="form-group">
+                            <label>Курьер</label>
+                            <select id="giveCourierId"><option value="">-- Выберите курьера --</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Тип предмета</label>
+                            <select id="giveItemType" onchange="loadFreeItems()">
+                                <option value="">-- Выберите тип --</option>
+                                <option value="bags">🎒 Сумки (1-20)</option>
+                                <option value="batteries">🔋 Аккумуляторы (1-20)</option>
+                                <option value="bicycles">🚲 Велосипеды (1-10)</option>
+                                <option value="raincoats">🌧️ Дождевики (1-15)</option>
+                                <option value="tools">🛠️ Инструменты (1-6)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Номер предмета</label>
+                            <select id="giveItemNum"><option value="">-- Сначала выберите тип --</option></select>
+                        </div>
+                        <button onclick="giveItem()" class="btn-success">📤 ВЫДАТЬ</button>
+                    </div>
+                </div>
+                
+                <!-- Правая колонка -->
+                <div>
+                    <!-- Статистика -->
+                    <div class="stats-card">
+                        <h2>📊 СТАТИСТИКА ИНВЕНТАРЯ</h2>
+                        <div class="stats-grid" id="stats"><div style="text-align: center; padding: 20px;">Загрузка...</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Занятые предметы -->
+            <div class="taken-card">
+                <h2>📦 ЗАНЯТЫЕ ПРЕДМЕТЫ</h2>
+                <div class="table-wrapper">
+                    <table class="items-table">
+                        <thead>
+                            <tr><th>Тип</th><th>Номер</th><th>Курьер</th><th>Время выдачи</th><th>Действие</th></tr>
+                        </thead>
+                        <tbody id="takenItemsList">
+                            <tr><td colspan="5" style="text-align: center;">Загрузка...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Вкладка График работы -->
+        <div id="main-tab-schedule" class="main-tab-content">
+            <div class="schedule-container">
+                <div class="regions-panel">
+                    <h3>🗺️ 7 РАЙОНОВ</h3>
+                    <div id="regionsList"><div class="loading">Загрузка районов...</div></div>
+                </div>
+                
+                <div class="schedule-panel">
+                    <h3 id="selectedRegionTitle">📅 График работы</h3>
+                    
+                    <div class="nav-buttons">
+                        <button onclick="shiftDays(-7)">◀ Пред. неделя</button>
+                        <span class="date-range" id="dateRangeText"></span>
+                        <button onclick="shiftDays(7)">След. неделя ▶</button>
+                        <button onclick="resetToToday()">Сегодня</button>
+                    </div>
+                    
+                    <div class="schedule-table-wrapper">
+                        <table class="schedule-table" id="scheduleTable">
+                            <thead id="scheduleHeader">
+                                <tr><th>Курьер / Дата</th></tr>
+                            </thead>
+                            <tbody id="scheduleBody">
+                                <tr><td colspan="2" style="text-align: center; padding: 40px;">Выберите район слева</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="schedule-legend">
+                        <div class="legend-item"><div class="legend-color n"></div><span>Н - не выход</span></div>
+                        <div class="legend-item"><div class="legend-color r"></div><span>Р - пришёл</span></div>
+                        <div class="legend-item"><div class="legend-color b"></div><span>Б - заболел</span></div>
+                        <div class="legend-item"><div class="legend-color o"></div><span>О - опоздал</span></div>
+                        <div class="legend-item"><div class="legend-color x"></div><span>Х - отключен</span></div>
+                        <div class="legend-item"><div class="legend-color s"></div><span>С - связи нет</span></div>
+                        <div class="legend-item"><div class="legend-color e"></div><span>Е - едет</span></div>
+                        <div class="legend-item"><div class="legend-color v"></div><span>В - выходной</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="message"></div>
+    
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        let currentShopId = '1';
+        let shops = {};
+        let scheduleOffset = 0;
+        let scheduleData = {};
+        let selectedRegionId = null;
+        let socket = null;
+        let saveTimeout = null;
+        let isScheduleTabActive = false;
+        
+        const toolNames = {"1":"Насос","2":"Молоток","3":"Ключ","4":"Отвертка","5":"Плоскогубцы","6":"Шуруповерт"};
+        
+        async function forceSaveSchedule() {
+            if (!currentShopId || !scheduleData) return;
+            try {
+                await fetch(`/api/shops/${currentShopId}/schedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scheduleData)
+                });
+            } catch (e) { console.error(e); }
+        }
+        
+        function debounceSaveSchedule() {
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => forceSaveSchedule(), 500);
+        }
+        
+        function initSocket() {
+            socket = io();
+            
+            socket.on('inventory_updated', (data) => {
+                if (data.shop_id === currentShopId) {
+                    loadStats(); loadTakenItems(); loadFreeItems();
+                }
+            });
+            socket.on('inventory_courier_added', (data) => {
+                if (data.shop_id === currentShopId) { 
+                    loadInventoryCouriers(); 
+                    showMessage(`✅ Курьер "${data.courier_name}" добавлен`);
+                }
+            });
+            socket.on('inventory_courier_removed', (data) => {
+                if (data.shop_id === currentShopId) { 
+                    loadInventoryCouriers(); 
+                    loadStats(); 
+                    loadTakenItems(); 
+                    showMessage(`✅ Курьер удалён`);
+                }
+            });
+            socket.on('shop_renamed', (data) => {
+                if (shops[data.shop_id]) { 
+                    shops[data.shop_id].name = data.new_name; 
+                    renderShopGrid();
+                    if (currentShopId === data.shop_id) {
+                        showMessage(`✅ Точка переименована в "${data.new_name}"`);
+                    }
+                }
+            });
+            socket.on('schedule_updated', (data) => {
+                if (data.shop_id === currentShopId && scheduleData[data.region_id]) {
+                    if (!scheduleData[data.region_id].statuses) scheduleData[data.region_id].statuses = {};
+                    if (!scheduleData[data.region_id].statuses[data.courier_id]) scheduleData[data.region_id].statuses[data.courier_id] = {};
+                    scheduleData[data.region_id].statuses[data.courier_id][data.date] = data.status;
+                    if (isScheduleTabActive) {
+                        if (selectedRegionId == data.region_id) renderSchedule();
+                        renderRegions();
+                    }
+                    debounceSaveSchedule();
+                }
+            });
+            socket.on('region_renamed', (data) => {
+                if (data.shop_id === currentShopId && scheduleData[data.region_id]) {
+                    scheduleData[data.region_id].name = data.new_name;
+                    if (isScheduleTabActive) { renderRegions(); if (selectedRegionId == data.region_id) renderSchedule(); }
+                    debounceSaveSchedule();
+                }
+            });
+            socket.on('schedule_courier_added', (data) => {
+                if (data.shop_id === currentShopId && scheduleData[data.region_id]) {
+                    if (!scheduleData[data.region_id].couriers) scheduleData[data.region_id].couriers = {};
+                    scheduleData[data.region_id].couriers[data.courier_id] = data.courier_name;
+                    if (isScheduleTabActive) { renderRegions(); if (selectedRegionId == data.region_id) renderSchedule(); }
+                    debounceSaveSchedule();
+                }
+            });
+            socket.on('schedule_courier_removed', (data) => {
+                if (data.shop_id === currentShopId && scheduleData[data.region_id]) {
+                    if (scheduleData[data.region_id].couriers) delete scheduleData[data.region_id].couriers[data.courier_id];
+                    if (scheduleData[data.region_id].statuses) delete scheduleData[data.region_id].statuses[data.courier_id];
+                    if (isScheduleTabActive) { renderRegions(); if (selectedRegionId == data.region_id) renderSchedule(); }
+                    debounceSaveSchedule();
+                }
+            });
+        }
+        
+        function switchMainTab(tab) {
+            document.querySelectorAll('.main-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(content => content.classList.remove('active'));
+            if (tab === 'inventory') {
+                document.querySelector('.main-tab-btn:first-child').classList.add('active');
+                document.getElementById('main-tab-inventory').classList.add('active');
+                isScheduleTabActive = false;
+            } else {
+                document.querySelector('.main-tab-btn:last-child').classList.add('active');
+                document.getElementById('main-tab-schedule').classList.add('active');
+                isScheduleTabActive = true;
+                loadScheduleData();
+            }
+        }
+        
+        async function loadShops() {
+            try {
+                const response = await fetch('/api/shops');
+                shops = await response.json();
+                renderShopGrid();
+                if (currentShopId && shops[currentShopId]) await loadCurrentShopData();
+                else if (Object.keys(shops).length > 0) { currentShopId = Object.keys(shops)[0]; await loadCurrentShopData(); }
+            } catch (e) { console.error(e); }
+        }
+        
+        function renderShopGrid() {
+            const container = document.getElementById('shopGrid');
+            let html = '';
+            for (const [id, shop] of Object.entries(shops)) {
+                html += `
+                    <div class="shop-card ${currentShopId === id ? 'active' : ''}" onclick="selectShop('${id}')">
+                        <div class="shop-card-name">${escapeHtml(shop.name)}</div>
+                        <div class="shop-card-id">ID: ${id}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+        
+        async function selectShop(shopId) {
+            currentShopId = shopId;
+            selectedRegionId = null;
+            scheduleOffset = 0;
+            renderShopGrid();
+            await loadCurrentShopData();
+        }
+        
+        async function loadCurrentShopData() {
+            document.getElementById('shopRenameInput').value = '';
+            await loadInventoryCouriers();
+            await loadStats();
+            await loadTakenItems();
+            await loadScheduleData();
+            loadFreeItems();
+        }
+        
+        function renameCurrentShop() {
+            const newName = document.getElementById('shopRenameInput').value.trim();
+            if (!newName) { showMessage('Введите новое название', true); return; }
+            socket.emit('shop_rename', { shop_id: currentShopId, new_name: newName });
+            document.getElementById('shopRenameInput').value = '';
+        }
+        
+        async function loadInventoryCouriers() {
+            try {
+                const response = await fetch(`/api/shops/${currentShopId}/inventory/couriers`);
+                const couriers = await response.json();
+                const courierList = document.getElementById('courierList');
+                const giveSelect = document.getElementById('giveCourierId');
+                
+                if (Object.keys(couriers).length === 0) {
+                    courierList.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">📭 Нет курьеров</div>';
+                    giveSelect.innerHTML = '<option value="">-- Нет курьеров --</option>';
+                    return;
+                }
+                let listHtml = '', giveHtml = '<option value="">-- Выберите курьера --</option>';
+                for (const [id, name] of Object.entries(couriers)) {
+                    listHtml += `<div class="courier-item"><div><span class="courier-name">${escapeHtml(name)}</span></div><button class="delete-btn" onclick="removeInventoryCourier('${id}')">Удалить</button></div>`;
+                    giveHtml += `<option value="${id}" data-name="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+                }
+                courierList.innerHTML = listHtml;
+                giveSelect.innerHTML = giveHtml;
+            } catch (e) { console.error(e); }
+        }
+        
+        function addInventoryCourier() {
+            const name = document.getElementById('newCourierName').value.trim();
+            if (!name) { showMessage('Введите имя курьера', true); return; }
+            socket.emit('inventory_courier_add', { shop_id: currentShopId, courier_name: name });
+            document.getElementById('newCourierName').value = '';
+        }
+        
+        function removeInventoryCourier(courierId) {
+            if (!confirm('Удалить курьера? Все его предметы будут освобождены.')) return;
+            socket.emit('inventory_courier_remove', { shop_id: currentShopId, courier_id: courierId });
+        }
+        
+        async function loadFreeItems() {
+            const itemType = document.getElementById('giveItemType').value;
+            const numSelect = document.getElementById('giveItemNum');
+            if (!itemType) { numSelect.innerHTML = '<option value="">-- Выберите тип --</option>'; return; }
+            try {
+                const response = await fetch(`/api/shops/${currentShopId}/inventory/items/free/${itemType}`);
+                const items = await response.json();
+                if (items.length === 0) numSelect.innerHTML = '<option value="">-- Нет свободных --</option>';
+                else {
+                    let options = '';
+                    for (const num of items) {
+                        if (itemType === 'tools') options += `<option value="${num}">${num}. ${toolNames[num] || 'Инструмент'}</option>`;
+                        else options += `<option value="${num}">${num}</option>`;
+                    }
+                    numSelect.innerHTML = options;
+                }
+            } catch (e) { console.error(e); }
+        }
+        
+        function giveItem() {
+            const courierSelect = document.getElementById('giveCourierId');
+            const courierName = courierSelect.options[courierSelect.selectedIndex]?.getAttribute('data-name');
+            const itemType = document.getElementById('giveItemType').value;
+            const itemNum = document.getElementById('giveItemNum').value;
+            if (!courierName || !itemType || !itemNum) { showMessage('Заполните все поля', true); return; }
+            socket.emit('inventory_update', { shop_id: currentShopId, action: 'give', item_type: itemType, item_num: itemNum, courier_name: courierName });
+            showMessage(`✅ Предмет выдан курьеру ${courierName}`);
+        }
+        
+        function forceFree(itemType, itemNum) {
+            if (!confirm(`Освободить предмет ${itemType} ${itemNum}?`)) return;
+            socket.emit('inventory_update', { shop_id: currentShopId, action: 'force_free', item_type: itemType, item_num: itemNum });
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch(`/api/shops/${currentShopId}/inventory/stats`);
+                const stats = await response.json();
+                const typeNames = { 'bags': '🎒 Сумки', 'batteries': '🔋 Аккумуляторы', 'bicycles': '🚲 Велосипеды', 'raincoats': '🌧️ Дождевики', 'tools': '🛠️ Инструменты' };
+                let statsHtml = '';
+                for (const [type, data] of Object.entries(stats)) {
+                    let fillClass = 'success';
+                    if (data.percent >= 80) fillClass = 'danger';
+                    else if (data.percent >= 60) fillClass = 'warning';
+                    statsHtml += `<div class="stat-item"><div class="stat-label">${typeNames[type]}</div><div class="stat-bar"><div class="stat-fill ${fillClass}" style="width: ${data.percent}%;">${data.taken}/${data.total}</div></div></div>`;
+                }
+                document.getElementById('stats').innerHTML = statsHtml;
+            } catch (e) { console.error(e); }
+        }
+        
+        async function loadTakenItems() {
+            try {
+                const response = await fetch(`/api/shops/${currentShopId}/inventory/items/taken`);
+                const items = await response.json();
+                const tbody = document.getElementById('takenItemsList');
+                if (items.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">📭 Нет занятых предметов</div></div>'; return; }
+                let html = '';
+                for (const item of items) {
+                    const displayName = item.type === 'tools' && item.tool_name ? `${item.number}. ${item.tool_name}` : item.number;
+                    html += `<tr><td>${item.type_display}</td><td>${displayName}</td><td>${escapeHtml(item.courier)}</td><td>${item.time_ago}</td><td><button class="force-free" onclick="forceFree('${item.type}', '${item.number}')">🔓 Освободить</button></td></tr>`;
+                }
+                tbody.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+        
+        function getDateStats(region, dateStr) {
+            if (!region || !region.couriers) return { r: 0, o: 0, b: 0, n: 0, v: 0, total: 0 };
+            const couriers = region.couriers || {};
+            const statuses = region.statuses || {};
+            let stats = { r: 0, o: 0, b: 0, n: 0, v: 0 };
+            for (const [courierId] of Object.entries(couriers)) {
+                const courierStatuses = statuses[courierId] || {};
+                const status = courierStatuses[dateStr] || 'Н';
+                if (status === 'Р') stats.r++;
+                else if (status === 'О') stats.o++;
+                else if (status === 'Б') stats.b++;
+                else if (status === 'Н') stats.n++;
+                else if (status === 'В') stats.v++;
+            }
+            return stats;
+        }
+        
+        async function loadScheduleData() {
+            try {
+                const response = await fetch(`/api/shops/${currentShopId}/schedule`);
+                const data = await response.json();
+                scheduleData = {};
+                for (let i = 1; i <= 7; i++) {
+                    if (data[i]) scheduleData[i] = data[i];
+                    else scheduleData[i] = { name: `Район ${i}`, couriers: {}, statuses: {} };
+                }
+                if (!selectedRegionId && Object.keys(scheduleData).length > 0) selectedRegionId = Object.keys(scheduleData)[0];
+                renderRegions();
+                if (selectedRegionId && scheduleData[selectedRegionId]) renderSchedule();
+            } catch (e) {
+                console.error(e);
+                scheduleData = {};
+                for (let i = 1; i <= 7; i++) scheduleData[i] = { name: `Район ${i}`, couriers: {}, statuses: {} };
+                renderRegions();
+            }
+        }
+        
+        function renderRegions() {
+            const container = document.getElementById('regionsList');
+            if (!container) return;
+            if (!scheduleData || Object.keys(scheduleData).length === 0) { container.innerHTML = '<div class="loading">Загрузка районов...</div>'; return; }
+            let html = '';
+            for (let i = 1; i <= 7; i++) {
+                const region = scheduleData[i] || { name: `Район ${i}`, couriers: {}, statuses: {} };
+                const couriers = region.couriers || {};
+                const courierCount = Object.keys(couriers).length;
+                html += `
+                    <div class="region-card ${selectedRegionId == i ? 'active' : ''}" onclick="selectRegion(${i})">
+                        <div class="region-header">
+                            <input type="text" class="region-name-input" id="region_name_${i}" value="${escapeHtml(region.name)}" onclick="event.stopPropagation()">
+                            <button class="region-save-btn" onclick="event.stopPropagation(); saveRegionName(${i})">💾</button>
+                        </div>
+                        <div class="couriers-in-region">
+                            <div id="region_couriers_${i}">
+                `;
+                for (const [courierId, courierName] of Object.entries(couriers)) {
+                    html += `<div class="region-courier-item"><span class="region-courier-name">👤 ${escapeHtml(courierName)}</span><button class="delete-btn remove-courier-btn" onclick="event.stopPropagation(); removeScheduleCourier(${i}, '${escapeHtml(courierId)}')">✖</button></div>`;
+                }
+                html += `
+                            </div>
+                            <div class="add-courier-to-region">
+                                <input type="text" id="new_schedule_courier_${i}" placeholder="Имя курьера" onclick="event.stopPropagation()">
+                                <button onclick="event.stopPropagation(); addScheduleCourier(${i})">➕ Добавить</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+        
+        function selectRegion(regionId) {
+            selectedRegionId = regionId;
+            renderRegions();
+            renderSchedule();
+        }
+        
+        function saveRegionName(regionId) {
+            const newName = document.getElementById(`region_name_${regionId}`).value.trim();
+            if (!newName) { showMessage('Название не может быть пустым', true); return; }
+            socket.emit('schedule_region_rename', { shop_id: currentShopId, region_id: regionId, new_name: newName });
+        }
+        
+        function addScheduleCourier(regionId) {
+            const courierName = document.getElementById(`new_schedule_courier_${regionId}`).value.trim();
+            if (!courierName) { showMessage('Введите имя курьера', true); return; }
+            socket.emit('schedule_courier_add', { shop_id: currentShopId, region_id: regionId, courier_name: courierName });
+            document.getElementById(`new_schedule_courier_${regionId}`).value = '';
+        }
+        
+        function removeScheduleCourier(regionId, courierId) {
+            if (!confirm('Удалить курьера из района?')) return;
+            socket.emit('schedule_courier_remove', { shop_id: currentShopId, region_id: regionId, courier_id: courierId });
+        }
+        
+        function getDateRange() {
+            const today = new Date();
+            const startDate = new Date(today);
+            startDate.setDate(today.getDate() + scheduleOffset);
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 27);
+            return { startDate, endDate };
+        }
+        
+        function formatDate(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+        
+        function formatDateDisplay(date) {
+            return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+        }
+        
+        function shiftDays(days) { scheduleOffset += days; renderSchedule(); }
+        function resetToToday() { scheduleOffset = 0; renderSchedule(); }
+        
+        function getStatusColor(status) {
+            const colors = { 'Н': '#f39c12', 'Р': '#2ecc71', 'Б': '#1abc9c', 'О': '#1abc9c', 'Х': '#95a5a6', 'С': '#9b59b6', 'Е': '#3498db', 'В': '#e74c3c' };
+            return colors[status] || '#f39c12';
+        }
+        
+        function renderSchedule() {
+            const scheduleHeader = document.getElementById('scheduleHeader');
+            const scheduleBody = document.getElementById('scheduleBody');
+            const selectedRegionTitle = document.getElementById('selectedRegionTitle');
+            
+            if (!selectedRegionId || !scheduleData || !scheduleData[selectedRegionId]) {
+                if (selectedRegionTitle) selectedRegionTitle.innerHTML = '📅 Выберите район слева';
+                if (scheduleHeader) scheduleHeader.innerHTML = '<th>Курьер / Дата</th>';
+                if (scheduleBody) scheduleBody.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 40px;">Выберите район слева</div></div>';
+                return;
+            }
+            
+            const region = scheduleData[selectedRegionId];
+            const couriers = region.couriers || {};
+            const couriersList = Object.entries(couriers);
+            const statuses = region.statuses || {};
+            
+            if (selectedRegionTitle) selectedRegionTitle.innerHTML = `📅 ${escapeHtml(region.name)} - График работы`;
+            
+            if (couriersList.length === 0) {
+                if (scheduleHeader) scheduleHeader.innerHTML = '<th>Курьер / Дата</th>';
+                if (scheduleBody) scheduleBody.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 40px;">Нет курьеров в этом районе. Добавьте курьеров в левой панели</div></div>';
+                return;
+            }
+            
+            const { startDate, endDate } = getDateRange();
+            const dates = [];
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                dates.push(new Date(d));
+            }
+            
+            const dateRangeText = document.getElementById('dateRangeText');
+            if (dateRangeText) dateRangeText.innerHTML = `${formatDateDisplay(startDate)} - ${formatDateDisplay(endDate)}`;
+            
+            let headerHtml = '<th>Курьер / Дата</th>';
+            for (let date of dates) {
+                headerHtml += `<th>${formatDateDisplay(date)}<br><small>${date.toLocaleDateString('ru', {weekday: 'short'})}</small></th>`;
+            }
+            if (scheduleHeader) scheduleHeader.innerHTML = headerHtml;
+            
+            let bodyHtml = '';
+            
+            // Строка ИТОГО - первая строка после шапки
+            bodyHtml += `<tr class="summary-row"><td class="summary-label" style="background:#e8f4fd; font-weight:bold;">📊 ИТОГО</td>`;
+            for (let date of dates) {
+                const dateStr = formatDate(date);
+                const stats = getDateStats(region, dateStr);
+                bodyHtml += `<td style="background:#e8f4fd;"><div class="summary-cell">`;
+                if (stats.r > 0) bodyHtml += `<span class="summary-badge r">Р ${stats.r}</span>`;
+                if (stats.o > 0) bodyHtml += `<span class="summary-badge o">О ${stats.o}</span>`;
+                if (stats.b > 0) bodyHtml += `<span class="summary-badge b">Б ${stats.b}</span>`;
+                if (stats.n > 0) bodyHtml += `<span class="summary-badge n">Н ${stats.n}</span>`;
+                if (stats.v > 0) bodyHtml += `<span class="summary-badge v">В ${stats.v}</span>`;
+                if (stats.r === 0 && stats.o === 0 && stats.b === 0 && stats.n === 0 && stats.v === 0) {
+                    bodyHtml += `<span style="color:#999;">-</span>`;
+                }
+                bodyHtml += `</div></td>`;
+            }
+            bodyHtml += `</tr>`;
+            
+            // Строки для каждого курьера
+            for (let [courierId, courierName] of couriersList) {
+                bodyHtml += `<tr><td style="font-weight:600;">${escapeHtml(courierName)}</td>`;
+                for (let date of dates) {
+                    const dateStr = formatDate(date);
+                    const courierStatuses = statuses[courierId] || {};
+                    const status = courierStatuses[dateStr] || 'Н';
+                    const bgColor = getStatusColor(status);
+                    bodyHtml += `<td><select class="status-select" onchange="updateScheduleStatus('${courierId}', '${dateStr}', this.value)" style="background-color: ${bgColor}; color: white;">
+                        <option value="Н" ${status === 'Н' ? 'selected' : ''}>Н</option>
+                        <option value="Р" ${status === 'Р' ? 'selected' : ''}>Р</option>
+                        <option value="Б" ${status === 'Б' ? 'selected' : ''}>Б</option>
+                        <option value="О" ${status === 'О' ? 'selected' : ''}>О</option>
+                        <option value="Х" ${status === 'Х' ? 'selected' : ''}>Х</option>
+                        <option value="С" ${status === 'С' ? 'selected' : ''}>С</option>
+                        <option value="Е" ${status === 'Е' ? 'selected' : ''}>Е</option>
+                        <option value="В" ${status === 'В' ? 'selected' : ''}>В</option>
+                    </select></td>`;
+                }
+                bodyHtml += `</tr>`;
+            }
+            
+            if (scheduleBody) scheduleBody.innerHTML = bodyHtml;
+        }
+        
+        function updateScheduleStatus(courierId, dateStr, newStatus) {
+            socket.emit('schedule_update', {
+                shop_id: currentShopId,
+                region_id: selectedRegionId,
+                courier_id: courierId,
+                date: dateStr,
+                status: newStatus
+            });
+        }
+        
+        function showMessage(text, isError = false) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.innerHTML = `<div class="message ${isError ? 'error' : 'success'}">${text}</div>`;
+            setTimeout(() => { msgDiv.innerHTML = ''; }, 3000);
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        async function init() {
+            initSocket();
+            await loadShops();
+            setInterval(() => { if (currentShopId) { loadStats(); loadTakenItems(); if (isScheduleTabActive) renderSchedule(); } }, 5000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>
